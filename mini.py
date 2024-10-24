@@ -4,6 +4,7 @@ import base64
 import os
 import subprocess
 import traceback
+import json
 from datetime import datetime, timedelta
 from enum import StrEnum
 from functools import partial
@@ -80,14 +81,12 @@ async def main():
         only_n_most_recent_images=only_n_most_recent_images,
     )
 
-    print(f"Printing {len(messages)} messages...\n")
-    for message in messages:
-        if isinstance(message["content"], str):
-            print((message["role"], message["content"]))
-        elif isinstance(message["content"], list):
-            print(message["role"])
-            for b in message["content"]:
-                print(b)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    output_file = f"conversation_{timestamp}.json"
+    
+    print(f"Saving {len(messages)} messages to {output_file}")
+    with open(output_file, 'w') as f:
+        json.dump(messages, f, indent=2, default=str)
 
 def _api_response_callback(
     request: httpx.Request,
