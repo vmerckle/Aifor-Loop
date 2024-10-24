@@ -169,7 +169,7 @@ def _render_message(
         if message.error:
             print(message.error)
         if message.base64_image:
-            print("mdr image")
+            pass
     elif isinstance(message, dict):
         if message["type"] == "text":
             print(message["text"])
