@@ -96,13 +96,14 @@ class ComputerTool(BaseAnthropicTool):
     def __init__(self, width=None, height=None):
         super().__init__()
         
-        if width is None or height is None:
-            self.width = int(os.getenv("WIDTH") or 0)
-            self.height = int(os.getenv("HEIGHT") or 0)
+        if width is None:
+            self.width = int(os.getenv("WIDTH")) if os.getenv("WIDTH") else None
         else:
             self.width = width
+        if height is None:
+            self.height = int(os.getenv("HEIGHT")) if os.getenv("HEIGHT") else None
+        else:
             self.height = height
-        assert self.width and self.height, "WIDTH, HEIGHT must be set"
 
         if (display_num := os.getenv("DISPLAY_NUM")) is not None:
             self.display_num = int(display_num)
@@ -112,6 +113,10 @@ class ComputerTool(BaseAnthropicTool):
             self._display_prefix = ""
 
         self.xdotool = f"{self._display_prefix}xdotool"
+
+    async def ensure_initialized(self):
+        if self.width is None or self.height is None:
+            await self.autodetect_resolution()
 
     async def __call__(
         self,
@@ -230,6 +235,25 @@ class ComputerTool(BaseAnthropicTool):
                 base64_image=base64.b64encode(path.read_bytes()).decode()
             )
         raise ToolError(f"Failed to take screenshot: {result.error}")
+
+    async def autodetect_resolution(self):
+        """Autodetect the resolution of the current screen."""
+        output_dir = Path(OUTPUT_DIR)
+        output_dir.mkdir(parents=True, exist_ok=True)
+        path = output_dir / f"screenshot_{uuid4().hex}.png"
+
+        # Try gnome-screenshot first
+        if shutil.which("gnome-screenshot"):
+            screenshot_cmd = f"{self._display_prefix}gnome-screenshot -f {path} -p"
+        else:
+            # Fall back to scrot if gnome-screenshot isn't available
+            screenshot_cmd = f"{self._display_prefix}scrot -p {path}"
+        result = await self.shell(screenshot_cmd, take_screenshot=False)
+        width_output = await self.shell(f'identify -format "%w" {path}', take_screenshot=False)
+        height_output = await self.shell(f'identify -format "%h" {path}', take_screenshot=False)
+        self.width = int(width_output.output)
+        self.height = int(height_output.output)
+        assert self.width is not None and self.height is not None
 
     async def shell(self, command: str, take_screenshot=True) -> ToolResult:
         """Run a shell command and return the output, error, and optionally a screenshot."""
