@@ -1,4 +1,5 @@
 import asyncio
+import platform
 import base64
 import os
 import subprocess
@@ -30,24 +31,23 @@ from tools.base import ToolResult
 
 from dotenv import load_dotenv
 
-CONFIG_DIR = PosixPath("~/.anthropic").expanduser()
-API_KEY_FILE = CONFIG_DIR / "api_key"
-STREAMLIT_STYLE = """
-<style>
-    /* Hide chat input while agent loop is running */
-    .stApp[data-teststate=running] .stChatInput textarea,
-    .stApp[data-test-script-state=running] .stChatInput textarea {
-        display: none;
-    }
-     /* Hide the streamlit deploy button */
-    .stAppDeployButton {
-        visibility: hidden;
-    }
-</style>
-"""
+SYSTEM_PROMPT = f"""<SYSTEM_CAPABILITY>
+* You are utilising an Ubuntu virtual machine using {platform.machine()} architecture with internet access.
+* You can feel free to install Ubuntu applications with your bash tool. Use curl instead of wget.
+* To open firefox, please just click on the firefox icon.  Note, firefox is what is installed on your system.
+* Using bash tool you can start GUI applications, but you need to set export DISPLAY=:1 and use a subshell. For example "(DISPLAY=:1 xterm &)". GUI apps run with bash tool will appear within your desktop environment, but they may take some time to appear. Take a screenshot to confirm it did.
+* When using your bash tool with commands that are expected to output very large quantities of text, redirect into a tmp file and use str_replace_editor or `grep -n -B <lines before> -A <lines after> <query> <filename>` to confirm output.
+* When viewing a page it can be helpful to zoom out so that you can see everything on the page.  Either that, or make sure you scroll down to see everything before deciding something isn't available.
+* When using your computer function calls, they take a while to run and send back to you.  Where possible/feasible, try to chain multiple of these calls all into one function calls request.
+* The current date is {datetime.today().strftime('%A, %B %-d, %Y')}.
+</SYSTEM_CAPABILITY>
 
-WARNING_TEXT = "⚠️ Security Alert: Never provide access to sensitive accounts or data, as malicious web content can hijack Claude's behavior"
+<IMPORTANT>
+* When using Firefox, if a startup wizard appears, IGNORE IT.  Do not even click "skip this step".  Instead, click on the address bar where it says "Search or enter address", and enter the appropriate search term or URL there.
+* If the item you are looking at is a pdf, if after taking a single screenshot of the pdf it seems that you want to read the entire document instead of trying to continue to read the pdf from your screenshots + navigation, determine the URL, use curl to download the pdf, install and use pdftotext to convert it to a text file, and then read that text file directly with your StrReplaceEditTool.
+</IMPORTANT>"""
 
+SYSTEM_PROMPT = f"You are are in control of a machine using {platform.machine()} architecture and running {platform.freedesktop_os_release()['NAME']}. Please don't delete anything unless asked three times."
 
 class Sender(StrEnum):
     USER = "user"
@@ -69,22 +69,23 @@ async def main():
     custom_system_prompt = ""
     hide_images = False
 
-    new_message = "Let's create a file named test with a nice poem inside, in /tmp. That's it."
-    new_message = "Just take a screenshot and tell me what's in it."
-    new_message = "Close the firefox tab. Use only the mouse!"
-    new_message = "Open firefox and watch some yellow stone"
-    new_message = "Just take a screenshot and tell me what's in it."
+    first_message = "Let's create a file named test with a nice poem inside, in /tmp. That's it."
+    first_message = "Just take a screenshot and tell me what's in it."
+    first_message = "Close the firefox tab. Use only the mouse!"
+    first_message = "Open firefox and watch some yellow stone"
+    first_message = "Just take a screenshot and tell me what's in it."
+
 
     messages = []
     messages.append(
         {
             "role": Sender.USER,
-            "content": [BetaTextBlockParam(type="text", text=new_message)],
+            "content": [BetaTextBlockParam(type="text", text=first_message)],
         }
     )
 
     messages = await sampling_loop(
-        system_prompt_suffix=custom_system_prompt,
+        system_prompt=SYSTEM_PROMPT,
         model=model,
         provider=provider,
         messages=messages,
@@ -176,8 +177,6 @@ def _render_message(
     sender: Sender,
     message: str | BetaContentBlockParam | ToolResult,
 ):
-    """Convert input from the user or output from the agent to a streamlit message."""
-    # streamlit's hotreloading breaks isinstance checks, so we need to check for class names
     is_tool_result = not isinstance(message, str | dict)
     if not message or (
         is_tool_result
@@ -196,32 +195,19 @@ def _render_message(
             print(message.error)
         if message.base64_image:
             print("mdr image")
-    #if is_tool_result:
-    #    message = cast(ToolResult, message)
-    #    if message.output:
-    #        if message.__class__.__name__ == "CLIResult":
-    #            st.code(message.output)
-    #        else:
-    #            st.markdown(message.output)
-    #    if message.error:
-    #        st.error(message.error)
-    #    if message.base64_image and not st.session_state.hide_images:
-    #        st.image(base64.b64decode(message.base64_image))
-    #elif isinstance(message, dict):
-    #    if message["type"] == "text":
-    #        st.write(message["text"])
-    #    elif message["type"] == "tool_use":
-    #        st.code(f'Tool Use: {message["name"]}\nInput: {message["input"]}')
-    #    else:
-    #        # only expected return types are text and tool_use
-    #        raise Exception(f'Unexpected response type {message["type"]}')
-    #else:
-    #    st.markdown(message)
+    elif isinstance(message, dict):
+        if message["type"] == "text":
+            print(message["text"])
+        elif message["type"] == "tool_use":
+            print(f'Tool Use: {message["name"]}\nInput: {message["input"]}')
+        else:
+            # only expected return types are text and tool_use
+            raise Exception(f'Unexpected response type {message["type"]}')
+    else:
+        print(message)
 
 
 if __name__ == "__main__":
-    tl = "{'id': 'toolu_011zRDBiwpyemE9dUA4RCSne', 'input': {'action': 'screenshot'}, 'name': 'computer', 'type': 'tool_use'}"
     #a = asyncio.run(ComputerTool().screenshot())
-
 
     asyncio.run(main())

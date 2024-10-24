@@ -8,7 +8,6 @@ This module is the heart of the Computer Use Demo system. It:
 4. Maintains conversation history and context
 """
 
-import platform
 from collections.abc import Callable
 from datetime import datetime
 from enum import StrEnum
@@ -65,33 +64,13 @@ PROVIDER_TO_DEFAULT_MODEL_NAME: dict[APIProvider, str] = {
 }
 
 
-# This system prompt is optimized for the Docker environment in this repository and
-# specific tool combinations enabled.
-# We encourage modifying this system prompt to ensure the model has context for the
-# environment it is running in, and to provide any additional information that may be
-# helpful for the task at hand.
-SYSTEM_PROMPT = f"""<SYSTEM_CAPABILITY>
-* You are utilising an Ubuntu virtual machine using {platform.machine()} architecture with internet access.
-* You can feel free to install Ubuntu applications with your bash tool. Use curl instead of wget.
-* To open firefox, please just click on the firefox icon.  Note, firefox is what is installed on your system.
-* Using bash tool you can start GUI applications, but you need to set export DISPLAY=:1 and use a subshell. For example "(DISPLAY=:1 xterm &)". GUI apps run with bash tool will appear within your desktop environment, but they may take some time to appear. Take a screenshot to confirm it did.
-* When using your bash tool with commands that are expected to output very large quantities of text, redirect into a tmp file and use str_replace_editor or `grep -n -B <lines before> -A <lines after> <query> <filename>` to confirm output.
-* When viewing a page it can be helpful to zoom out so that you can see everything on the page.  Either that, or make sure you scroll down to see everything before deciding something isn't available.
-* When using your computer function calls, they take a while to run and send back to you.  Where possible/feasible, try to chain multiple of these calls all into one function calls request.
-* The current date is {datetime.today().strftime('%A, %B %-d, %Y')}.
-</SYSTEM_CAPABILITY>
-
-<IMPORTANT>
-* When using Firefox, if a startup wizard appears, IGNORE IT.  Do not even click "skip this step".  Instead, click on the address bar where it says "Search or enter address", and enter the appropriate search term or URL there.
-* If the item you are looking at is a pdf, if after taking a single screenshot of the pdf it seems that you want to read the entire document instead of trying to continue to read the pdf from your screenshots + navigation, determine the URL, use curl to download the pdf, install and use pdftotext to convert it to a text file, and then read that text file directly with your StrReplaceEditTool.
-</IMPORTANT>"""
 
 
 async def sampling_loop(
     *,
     model: str,                    # Which Claude model to use (e.g. "claude-3-sonnet")
     provider: APIProvider,         # Which AI provider to use (Anthropic/AWS/Google)
-    system_prompt_suffix: str,     # Additional instructions to add to system prompt
+    system_prompt: str,     # Additional instructions to add to system prompt
     messages: list[BetaMessageParam],  # Conversation history
     output_callback: Callable[[BetaContentBlockParam], None],  # Function to handle Claude's text responses
     tool_output_callback: Callable[[ToolResult, str], None],   # Function to handle tool results
@@ -102,27 +81,14 @@ async def sampling_loop(
     only_n_most_recent_images: int | None = None,  # Limit number of images in context
     max_tokens: int = 4096,        # Maximum tokens in Claude's response
 ):
-    """
-    Main conversation loop that handles:
-    1. Setting up tools (Computer, Bash, Text Editor)
-    2. Creating the appropriate AI client
-    3. Sending messages to Claude
-    4. Processing Claude's responses
-    5. Executing tool requests
-    6. Managing conversation history
-    7. Handling errors and timeouts
-    """
     tool_collection = ToolCollection(
         ComputerTool(),
         BashTool(),
         EditTool(),
     )
-    #print(ComputerTool().to_params())
-    #print(ToolCollection(ComputerTool()).to_params())
-    #assert False
     system = BetaTextBlockParam(
         type="text",
-        text=f"{SYSTEM_PROMPT}{' ' + system_prompt_suffix if system_prompt_suffix else ''}",
+        text=f"{SYSTEM_PROMPT}",
     )
 
     while True:
