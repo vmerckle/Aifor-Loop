@@ -47,7 +47,11 @@ SYSTEM_PROMPT = f"""<SYSTEM_CAPABILITY>
 * If the item you are looking at is a pdf, if after taking a single screenshot of the pdf it seems that you want to read the entire document instead of trying to continue to read the pdf from your screenshots + navigation, determine the URL, use curl to download the pdf, install and use pdftotext to convert it to a text file, and then read that text file directly with your StrReplaceEditTool.
 </IMPORTANT>"""
 
-SYSTEM_PROMPT = f"You are are in control of a machine using {platform.machine()} architecture and running {platform.freedesktop_os_release()['NAME']}. Please don't delete anything unless asked three times."
+# Load system prompt
+with open('system_prompt.txt', 'r') as f:
+    SYSTEM_PROMPT = f.read().strip().format(
+        platform=platform
+    )
 
 class Sender(StrEnum):
     USER = "user"
@@ -69,12 +73,9 @@ async def main():
     custom_system_prompt = ""
     hide_images = False
 
-    first_message = "Let's create a file named test with a nice poem inside, in /tmp. That's it."
-    first_message = "Just take a screenshot and tell me what's in it."
-    first_message = "Close the firefox tab. Use only the mouse!"
-    first_message = "Open firefox and watch some yellow stone"
-    first_message = "Just take a screenshot and tell me what's in it."
-
+    # Load first message
+    with open('prompt.txt', 'r') as f:
+        first_message = f.read().strip()
 
     messages = []
     messages.append(

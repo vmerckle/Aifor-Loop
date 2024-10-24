@@ -1,0 +1,1 @@
+Let's create a file named test with a nice poem inside, in /tmp. That's it.
