@@ -86,6 +86,7 @@ async def sampling_loop(
         BashTool(),
         EditTool(),
     )
+    #tool_collection = ToolCollection( BashTool(),)
     system = BetaTextBlockParam(
         type="text",
         text=f"{system_prompt}",
@@ -107,7 +108,7 @@ async def sampling_loop(
             betas.append(PROMPT_CACHING_BETA_FLAG)
             _inject_prompt_caching(messages)
             # Is it ever worth it to bust the cache with prompt caching?
-            image_truncation_threshold = 50
+            image_truncation_threshold = 1 # lol? 50 default.
             system["cache_control"] = {"type": "ephemeral"}
 
         if only_n_most_recent_images:
@@ -169,6 +170,7 @@ async def sampling_loop(
             return messages
         messages.append({"content": tool_result_content, "role": "user"})
         input("-- press enter to continue --") # safety
+        #time.sleep(0.5)
 
 
 def _maybe_filter_to_n_most_recent_images(

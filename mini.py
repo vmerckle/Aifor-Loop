@@ -32,8 +32,22 @@ from tools.base import ToolResult
 
 from dotenv import load_dotenv
 
-# Load system prompt
-SYSTEM_PROMPT = f"You are are in control of a machine using {platform.machine()} architecture and running {platform.freedesktop_os_release()['NAME']}. Please don't delete anything unless asked three times."
+SYSTEM_PROMPT = f"""
+<SYSTEM_CAPABILITY>
+* You are are in control of a machine using {platform.machine()} architecture and running {platform.freedesktop_os_release()['NAME']}. Please don't delete anything unless asked three times.
+* You are using I3. To easily launch a program, press super+D, type the program name and press enter. The file manager is Thunar.
+* When using your bash tool with commands that are expected to output very large quantities of text, redirect into a tmp file and use str_replace_editor or `grep -n -B <lines before> -A <lines after> <query> <filename>` to confirm output.
+* When viewing a page it can be helpful to zoom out so that you can see everything on the page.  Either that, or make sure you scroll down to see everything before deciding something isn't available.
+* When using your computer function calls, they take a while to run and send back to you.  Where possible/feasible, try to chain multiple of these calls all into one function calls request.
+* The current date is {datetime.today().strftime('%A, %B %-d, %Y')}.
+</SYSTEM_CAPABILITY>
+
+<IMPORTANT>
+* When using Firefox, click on the address bar where it says "Search or enter address", and enter the appropriate search term or URL there.
+* When using Gmail, click in the middle of the research bar area. Do not click on the search icon.
+* When entering text, make sure to delete the text already there if you correct a mistake.
+</IMPORTANT>
+"""
 
 class Sender(StrEnum):
     USER = "user"
@@ -50,7 +64,7 @@ async def main():
     # auth is not validated
     responses = {}
     tools = {}
-    only_n_most_recent_images = 10
+    only_n_most_recent_images = 1 # important setting to save money.
     hide_images = False
 
     # Load first message
