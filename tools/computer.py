@@ -88,16 +88,19 @@ class ComputerTool(BaseAnthropicTool):
         }
 
     def to_params(self) -> BetaToolComputerUse20241022Param:
-        return {"name": self.name, "type": self.api_type, 
-                "display_width_px": self.width,
-                "display_height_px": self.height,
-            "display_number": 0}
+        return {"name": self.name, "type": self.api_type, **self.options}
 
-    def __init__(self):
+    def __init__(self, width=None, height=None):
         super().__init__()
+        
+        if width is None or height is None:
+            self.width = int(os.getenv("WIDTH") or 0)
+            self.height = int(os.getenv("HEIGHT") or 0)
+        else:
+            self.width = width
+            self.height = height
+        assert self.width and self.height, "WIDTH, HEIGHT must be set"
 
-        self.width = int(os.getenv("WIDTH") or 1024)  # XGA default width
-        self.height = int(os.getenv("HEIGHT") or 768)  # XGA default height
         if (display_num := os.getenv("DISPLAY_NUM")) is not None:
             self.display_num = int(display_num)
             self._display_prefix = f"DISPLAY=:{self.display_num} "
@@ -137,7 +140,6 @@ class ComputerTool(BaseAnthropicTool):
                 )
 
         if action in ("key", "type"):
-            print(action)
             if text is None:
                 raise ToolError(f"text is required for {action}")
             if coordinate is not None:
@@ -210,7 +212,6 @@ class ComputerTool(BaseAnthropicTool):
             # Fall back to scrot if gnome-screenshot isn't available
             screenshot_cmd = f"{self._display_prefix}scrot -p {path}"
 
-        print(screenshot_cmd)
         result = await self.shell(screenshot_cmd, take_screenshot=False)
         if self._scaling_enabled:
             x, y = self.scale_coordinates(
@@ -228,7 +229,6 @@ class ComputerTool(BaseAnthropicTool):
 
     async def shell(self, command: str, take_screenshot=True) -> ToolResult:
         """Run a shell command and return the output, error, and optionally a screenshot."""
-        print("Running this:", command)
         _, stdout, stderr = await run(command)
         base64_image = None
 
@@ -263,3 +263,4 @@ class ComputerTool(BaseAnthropicTool):
             return round(x / x_scaling_factor), round(y / y_scaling_factor)
         # scale down
         return round(x * x_scaling_factor), round(y * y_scaling_factor)
+

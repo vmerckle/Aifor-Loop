@@ -1,1 +1,1 @@
-Let's create a file named test with a nice poem inside, in /tmp. That's it.
+Describe what you see on the screen.

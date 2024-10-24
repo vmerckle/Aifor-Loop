@@ -82,13 +82,13 @@ async def sampling_loop(
     max_tokens: int = 4096,        # Maximum tokens in Claude's response
 ):
     tool_collection = ToolCollection(
-        ComputerTool(),
+        ComputerTool(width=1920, height=1080),
         BashTool(),
         EditTool(),
     )
     system = BetaTextBlockParam(
         type="text",
-        text=f"{SYSTEM_PROMPT}",
+        text=f"{system_prompt}",
     )
 
     while True:
@@ -164,11 +164,11 @@ async def sampling_loop(
                 )
                 tool_output_callback(result, content_block["id"])
 
+        # exit loop if the llm doesn't ask for tool use
         if not tool_result_content:
             return messages
-
         messages.append({"content": tool_result_content, "role": "user"})
-        input("ok waiting, do you like the output lol?")
+        input("-- press enter to continue --") # safety
 
 
 def _maybe_filter_to_n_most_recent_images(
