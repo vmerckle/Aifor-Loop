@@ -81,7 +81,7 @@ async def sampling_loop(
     only_n_most_recent_images: int | None = None,  # Limit number of images in context
     max_tokens: int = 4096,        # Maximum tokens in Claude's response
 ):
-    computer_tool = ComputerTool(width=None, height=None)
+    computer_tool = ComputerTool(width=1366, height=768)
     await computer_tool.ensure_initialized()
     tool_collection = ToolCollection(
         computer_tool,
@@ -171,8 +171,8 @@ async def sampling_loop(
         if not tool_result_content:
             return messages
         messages.append({"content": tool_result_content, "role": "user"})
-        input("-- press enter to continue --") # safety
-        #time.sleep(0.5)
+        # input("-- press enter to continue --") # safety
+        time.sleep(0.2)
 
 
 def _maybe_filter_to_n_most_recent_images(

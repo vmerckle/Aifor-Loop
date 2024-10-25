@@ -76,6 +76,11 @@ class ComputerTool(BaseAnthropicTool):
     height: int
     display_num: int | None
 
+    debug : bool = True
+    debug_dir: str = "debug"
+    debug_path: Path | None = None
+    last_screenshot_path: Path | None = None
+
     _screenshot_delay = 2.0
     _scaling_enabled = True
 
@@ -114,6 +119,10 @@ class ComputerTool(BaseAnthropicTool):
 
         self.xdotool = f"{self._display_prefix}xdotool"
 
+        if self.debug:
+            self.debug_path = Path().resolve() / self.debug_dir
+            self.debug_path.mkdir(parents=True, exist_ok=True)
+
     async def ensure_initialized(self):
         if self.width is None or self.height is None:
             await self.autodetect_resolution()
@@ -141,6 +150,10 @@ class ComputerTool(BaseAnthropicTool):
             )
 
             if action == "mouse_move":
+                if self.debug:
+                    command = f"convert -pointsize 40 -fill blue -draw 'translate {x},{y} roundrectangle -5,-5 5,5 10,10' {self.last_screenshot_path} {self.last_screenshot_path}"
+                    await self.shell(command, take_screenshot=False)
+
                 return await self.shell(f"{self.xdotool} mousemove --sync {x} {y}")
             elif action == "left_click_drag":
                 return await self.shell(
@@ -231,6 +244,9 @@ class ComputerTool(BaseAnthropicTool):
             )
 
         if path.exists():
+            if self.debug:
+                shutil.copy(path, self.debug_path / path.name)
+                self.last_screenshot_path = self.debug_path / path.name
             return result.replace(
                 base64_image=base64.b64encode(path.read_bytes()).decode()
             )
