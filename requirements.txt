@@ -1,0 +1,4 @@
+anthropic[bedrock,vertex]>=0.37.1
+python-dotenv>=1.0.0
+httpx>=0.27.0
+ascii-magic>=2.3.0
