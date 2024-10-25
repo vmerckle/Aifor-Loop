@@ -81,7 +81,7 @@ async def sampling_loop(
     only_n_most_recent_images: int | None = None,  # Limit number of images in context
     max_tokens: int = 4096,        # Maximum tokens in Claude's response
 ):
-    computer_tool = ComputerTool(width=1366, height=768)
+    computer_tool = ComputerTool(width=None, height=None)
     await computer_tool.ensure_initialized()
     tool_collection = ToolCollection(
         computer_tool,

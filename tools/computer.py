@@ -151,7 +151,7 @@ class ComputerTool(BaseAnthropicTool):
 
             if action == "mouse_move":
                 if self.debug:
-                    command = f"convert -pointsize 40 -fill blue -draw 'translate {x},{y} roundrectangle -5,-5 5,5 10,10' {self.last_screenshot_path} {self.last_screenshot_path}"
+                    command = f"convert -pointsize 40 -fill blue -draw 'translate {coordinate[0]},{coordinate[1]} roundrectangle -5,-5 5,5 10,10' {self.last_screenshot_path} {self.last_screenshot_path}"
                     await self.shell(command, take_screenshot=False)
 
                 return await self.shell(f"{self.xdotool} mousemove --sync {x} {y}")
@@ -234,7 +234,7 @@ class ComputerTool(BaseAnthropicTool):
             screenshot_cmd = f"{self._display_prefix}scrot -p {path}"
 
         result = await self.shell(screenshot_cmd, take_screenshot=False)
-        AsciiArt.from_image(path).to_terminal(columns=80)
+        #AsciiArt.from_image(path).to_terminal(columns=80)
         if self._scaling_enabled:
             x, y = self.scale_coordinates(
                 ScalingSource.COMPUTER, self.width, self.height
@@ -245,7 +245,9 @@ class ComputerTool(BaseAnthropicTool):
 
         if path.exists():
             if self.debug:
-                shutil.copy(path, self.debug_path / path.name)
+
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                shutil.copy(path, self.debug_path / f"screen-{timestamp}.{path.suffix}")
                 self.last_screenshot_path = self.debug_path / path.name
             return result.replace(
                 base64_image=base64.b64encode(path.read_bytes()).decode()

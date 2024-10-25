@@ -45,6 +45,7 @@ SYSTEM_PROMPT = f"""
 <IMPORTANT>
 * When using Firefox, click on the address bar where it says "Search or enter address", and enter the appropriate search term or URL there.
 * When using Gmail, click in the middle of the research bar area. Do not click on the search icon.
+* To make a search in gmail, first type your text
 * When entering text, make sure to delete the text already there if you correct a mistake.
 </IMPORTANT>
 """
