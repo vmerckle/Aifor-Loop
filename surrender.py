@@ -106,7 +106,7 @@ async def main():
     )
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    output_file = f"conversation_{timestamp}.json"
+    output_file = f"debug/conversation_{timestamp}.json"
     
     print(f"Saving {len(messages)} messages to {output_file}")
     with open(output_file, 'w') as f:
