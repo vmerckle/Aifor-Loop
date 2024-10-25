@@ -23,7 +23,7 @@ class _BashSession:
         self._timed_out = False
 
     async def start(self):
-        print("started a bash session", self.command)
+        #print("started a bash session", self.command)
         if self._started:
             return
 
@@ -93,7 +93,7 @@ class _BashSession:
 
         if output.endswith("\n"):
             output = output[:-1]
-
+        #print(output)
         error = self._process.stderr._buffer.decode()  # pyright: ignore[reportAttributeAccessIssue]
         if error.endswith("\n"):
             error = error[:-1]

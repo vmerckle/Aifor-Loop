@@ -15,6 +15,7 @@ from .run import run
 
 
 from ascii_magic import AsciiArt
+from datetime import datetime, timedelta
 
 OUTPUT_DIR = "/tmp/outputs"
 
@@ -234,7 +235,7 @@ class ComputerTool(BaseAnthropicTool):
             screenshot_cmd = f"{self._display_prefix}scrot -p {path}"
 
         result = await self.shell(screenshot_cmd, take_screenshot=False)
-        #AsciiArt.from_image(path).to_terminal(columns=80)
+        AsciiArt.from_image(path).to_terminal(columns=80)
         if self._scaling_enabled:
             x, y = self.scale_coordinates(
                 ScalingSource.COMPUTER, self.width, self.height

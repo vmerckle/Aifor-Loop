@@ -88,7 +88,7 @@ async def sampling_loop(
         BashTool(),
         EditTool(),
     )
-    #tool_collection = ToolCollection( BashTool(),)
+    #tool_collection = ToolCollection(computer_tool,)
     system = BetaTextBlockParam(
         type="text",
         text=f"{system_prompt}",

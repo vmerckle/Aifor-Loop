@@ -20,7 +20,7 @@ async def run(
     timeout: float | None = 120.0,  # seconds
     truncate_after: int | None = MAX_RESPONSE_LEN,
 ):
-    print("hello", cmd, timeout, truncate_after)
+    #print("hello", cmd, timeout, truncate_after)
     """Run a shell command asynchronously with a timeout."""
     process = await asyncio.create_subprocess_shell(
         cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
