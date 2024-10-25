@@ -23,6 +23,7 @@ class _BashSession:
         self._timed_out = False
 
     async def start(self):
+        print("started a bash session", self.command)
         if self._started:
             return
 
@@ -48,6 +49,7 @@ class _BashSession:
 
     async def run(self, command: str):
         """Execute a command in the bash shell."""
+        print("running a bash command:", command)
         if not self._started:
             raise ToolError("Session has not started.")
         if self._process.returncode is not None:
