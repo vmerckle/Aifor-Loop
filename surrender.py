@@ -1,6 +1,7 @@
 #!/bin/python
 
 import asyncio
+import argparse
 import platform
 import base64
 import os
@@ -74,9 +75,11 @@ async def main():
     only_n_most_recent_images = 1 # important setting to save money.
     hide_images = False
 
-    # Load first message
-    with open('prompt.txt', 'r') as f:
-        first_message = f.read().strip()
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(description='Run the surrender assistant')
+    parser.add_argument('prompt', help='The initial prompt for the assistant')
+    args = parser.parse_args()
+    first_message = args.prompt
 
     messages = [
         {
